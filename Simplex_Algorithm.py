@@ -3,6 +3,18 @@ from dataclasses import dataclass
 from typing import Iterable, Tuple
 
 
+def _solve_linear(A: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Solve A x = b allowing for rectangular A via least squares."""
+    A = np.asarray(A, dtype=float)
+    b = np.asarray(b, dtype=float)
+
+    if A.shape[0] == A.shape[1]:
+        return np.linalg.solve(A, b)
+
+    solution, *_ = np.linalg.lstsq(A, b, rcond=None)
+    return solution
+
+
 @dataclass
 class LinearProgram:
     A: np.ndarray
@@ -18,7 +30,7 @@ def get_vertex(B: Iterable[int], lp: LinearProgram, *, one_based: bool = True) -
         b_inds = b_inds - 1
 
     AB = lp.A[:, b_inds]
-    xB = np.linalg.solve(AB, lp.b)
+    xB = _solve_linear(AB, lp.b)
 
     x = np.zeros(lp.c.shape, dtype=float)
     x[b_inds] = xB
@@ -43,10 +55,10 @@ def edge_transition(lp: LinearProgram, B: Iterable[int], q: int, *, one_based: b
     n_inds = all_indices[mask]
 
     AB = A[:, b_inds]
-    direction = np.linalg.solve(AB, A[:, n_inds[q]])
-    xB = np.linalg.solve(AB, b)
+    direction = _solve_linear(AB, A[:, n_inds[q]])
+    xB = _solve_linear(AB, b)
 
-    pivot_index = -1 if not one_based else 0
+    pivot_index = 0 if one_based else -1
     min_ratio = np.inf
 
     for idx, d_i in enumerate(direction):
@@ -80,9 +92,9 @@ def step_lp(B: Iterable[int], lp: LinearProgram, *, one_based: bool = True) -> T
     AB = A[:, sorted_basis_zero]
     AV = A[:, non_basis_zero]
 
-    xB = np.linalg.solve(AB, b)
+    xB = _solve_linear(AB, b)
     cB = c[sorted_basis_zero]
-    lam = np.linalg.solve(AB.T, cB)
+    lam = _solve_linear(AB.T, cB)
     cV = c[non_basis_zero]
     muV = cV - AV.T @ lam
 
