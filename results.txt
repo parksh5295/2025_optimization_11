@@ -1,0 +1,38 @@
+Example run of examples.py (two-phase simplex translation)
+=============================================================
+
+Raw output
+----------
+get_vertex with basis {3,4} -> [0. 0. 4. 5.]
+edge_transition entering variable q=1 -> pivot row 2 step 2.5
+step_lp first iteration -> basis [2, 4] optimal? False
+step_lp second iteration -> basis [2, 1] optimal? False
+minimize_lp_basis starting from slack basis -> [2, 1]
+minimize_lp two-phase solution -> [1. 3. 0. 0.]
+final basis from minimize_lp_basis -> [2, 1]
+objective value c^T x -> -9.0
+solution from minimize_lp -> [1. 3. 0. 0.]
+dual_certificate with optimal x and lambda -> True
+lambda -> [-1. -1.]
+
+Interpretation
+--------------
+- `get_vertex` baseline: slack-only basis `{3,4}` produces feasible point `x = (0, 0, 4, 5)` satisfying the constraints.
+- `edge_transition`: entering non-basis variable `q = 1` (original variable `x1`) leaves via row 2 with step length `2.5`, matching the ratio test expectation.
+- `step_lp`: first pivot swaps in `x2`, second pivot swaps in `x1`, leading to basis `[2, 1]`; still not optimal until reduced costs vanish in later calls.
+- `minimize_lp_basis`: iterating `step_lp` on the original LP converges to the optimal basis `[2, 1]` (original variables `x1`, `x2`).
+- `minimize_lp`: full two-phase simplex finds the optimal solution `(x1, x2, s1, s2) = (1, 3, 0, 0)` with objective value `c^T x = -9`. Because we minimized the negated objective, the corresponding maximization value is `9`.
+- `dual_certificate`: Lagrange multipliers `λ = (-1, -1)` satisfy primal feasibility, dual feasibility, and complementary slackness, confirming optimality.
+
+해석 (korean.ver)
+------------
+- `get_vertex` 기본 해: 슬랙 변수만 포함한 기저 `{3,4}`에서 제약을 만족하는 점 `x = (0, 0, 4, 5)`를 얻습니다.
+- `edge_transition`: 비기저 변수 `q = 1`(본래 변수 `x1`)을 들이면 2행에서 빠져나가고 스텝 길이는 `2.5`로, 최소비율(비율 테스트) 결과와 일치합니다.
+- `step_lp`: 첫 번째 피벗에서 `x2`가 들어오고, 두 번째 피벗에서 `x1`이 들어오면서 기저가 `[2, 1]`로 바뀝니다. 이후 추가 호출에서 감소된 비용이 사라져야 최적 상태가 됩니다.
+- `minimize_lp_basis`: 원래 LP에 `step_lp`를 반복 적용하면 최적 기저 `[2, 1]`(원 변수 `x1`, `x2`)에 수렴합니다.
+- `minimize_lp`: 2단계 심플렉스 전체에서는 `(x1, x2, s1, s2) = (1, 3, 0, 0)`이 최적 해로 나오고 목적함수 값은 `c^T x = -9`입니다. 부호를 바꾼 목적을 최소화했기 때문에 최대화 문제의 값은 `9`가 됩니다.
+- `dual_certificate`: 라그랑주 승수 `λ = (-1, -1)`가 프라이멀 타당성, 듀얼 타당성, 여분 보완 조건을 모두 만족해 최적 해임을 확인시켜 줍니다.
+
+Conclusion
+---------
+The Python translation reproduces the simplex steps and certificates expected from the original Julia implementation on the demo LP. All intermediate and final checks pass, validating the translated algorithms.
